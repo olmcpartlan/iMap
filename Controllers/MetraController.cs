@@ -1,13 +1,12 @@
-﻿using System;
+﻿using MetraApi.Models;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Net.Http;
-using Newtonsoft.Json;
-using MetraApi.Models;
-using System.Data.SqlClient;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 
 // The main idea here is to use sql queries for the larger datasets (stop_times, routes) as they're 
 // not likely to change. 
@@ -120,7 +119,7 @@ namespace MetraApi.Controllers
 
 
     [HttpPost("stoptimes")]
-    public ActionResult<string> GetTimesToday([FromBody] object body)
+    public List<MetraStopTime> GetTimesToday([FromBody] object body)
     {
       // body contains the departure id and destination id 
 
@@ -134,15 +133,16 @@ namespace MetraApi.Controllers
         using (SqlCommand command = new SqlCommand("GetTimesToday", connection))
         {
           command.CommandType = System.Data.CommandType.StoredProcedure;
-          command.Parameters.AddWithValue("@departure", stopIds["selectedDepartureId"]);
+          command.Parameters.AddWithValue("@departure", stopIds["selectedDestinationId"]);
+          command.Parameters.AddWithValue("@destination", stopIds["selectedDepartureId"]);
 
           connection.Open();
 
           List<MetraStopsWithDays> metraStopsWithDays = new List<MetraStopsWithDays>();
 
-          using(SqlDataReader reader = command.ExecuteReader())
+          using (SqlDataReader reader = command.ExecuteReader())
           {
-            while(reader.Read())
+            while (reader.Read())
             {
               metraStopsWithDays.Add(new MetraStopsWithDays()
               {
@@ -157,11 +157,11 @@ namespace MetraApi.Controllers
                 stop_sequence = reader.GetString(8),
                 monday = reader.GetString(9),
                 tuesday = reader.GetString(10),
-                wednesday  = reader.GetString(11),
+                wednesday = reader.GetString(11),
                 thursday = reader.GetString(12),
                 friday = reader.GetString(13),
-                saturday  = reader.GetString(14),
-                sunday  = reader.GetString(15),
+                saturday = reader.GetString(14),
+                sunday = reader.GetString(15),
                 previous_sequence = !reader.IsDBNull(16) ? reader.GetString(15) : null
 
               });
@@ -172,18 +172,47 @@ namespace MetraApi.Controllers
           MetraStopsWithDays null_previous = metraStopsWithDays.FirstOrDefault(s => s.previous_sequence == null);
           metraStopsWithDays.Remove(null_previous);
 
-
           // get the stops that have the selected departure and destination
-          List<MetraStopsWithDays> stopsWithDestination = metraStopsWithDays
-              .Where(s => int.Parse(s.previous_sequence) > int.Parse(s.stop_sequence))
-              .ToList();
+          List<MetraStopsWithDays> stopsWithDestination = new List<MetraStopsWithDays>();
+          List<MetraStopTime> finalStopInformation = new List<MetraStopTime>();
 
 
 
+          metraStopsWithDays.ForEach(stop =>
+          {
+            MetraStopsWithDays[] commonTrips = metraStopsWithDays.Where(s => s.trip_id == stop.trip_id).ToArray();
+
+            string today = DateTime.Today.DayOfWeek.ToString().ToLower();
+
+            string runsToday = stop.GetType().GetProperty(today).GetValue(stop, null).ToString();
+
+            if (runsToday == "1")
+            {
+              if (commonTrips.Count() > 1)
+              {
+                finalStopInformation.Add(new MetraStopTime()
+                {
+                  trip_id = stop.trip_id,
+                  departure_id = commonTrips[0].stop_id,
+                  departure_name = commonTrips[0].stop_name,
+                  departure_time = commonTrips[0].arrival_time,
+
+                  destination_id = commonTrips[1].stop_id,
+                  destination_name = commonTrips[1].stop_name,
+                  destination_time = commonTrips[1].arrival_time,
+
+                });
+
+              }
+            }
+
+          });
 
           connection.Close();
 
-          Console.WriteLine();
+          return finalStopInformation.GroupBy(x => x.departure_time) 
+            .Select(group => group.First()).ToList();
+
 
         }
       }
@@ -194,8 +223,6 @@ namespace MetraApi.Controllers
 
       // submission of the form needs to lead to an animation that slides the form to the side
 
-
-      return "done";
     }
 
   }

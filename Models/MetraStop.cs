@@ -89,7 +89,17 @@ namespace MetraApi.Models
 
   }
 
+  public class MetraStopTime
+  {
+    public string trip_id { get; set; }
 
-}
+    public string departure_id { get; set; }
+    public string departure_name { get; set; }
+    public string departure_time { get; set; }
+
+    public string destination_id { get; set; }
+    public string destination_name { get; set; }
+    public string destination_time { get; set; }
+  }
 
 }

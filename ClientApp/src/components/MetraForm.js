@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Select from 'react-select';
 import { Button } from 'reactstrap';
+import { useSpring, animated } from 'react-spring'
 
 export default class MetraForm extends Component {
   constructor(props) {
@@ -8,8 +9,12 @@ export default class MetraForm extends Component {
     this.state = {
       apiDidRespond: false,
       stops: [],
+      destinations: [],
       selectedDepartureId: "",
-      selectedDestinationId: ""
+      selectedDestinationId: "",
+      destinationDisabled: true,
+      submitDisabled: true,
+      fade: false,
     }
   }
 
@@ -36,10 +41,6 @@ export default class MetraForm extends Component {
   }
 
   handleDeparture = (e) => {
-    this.setState({
-      selectedDepartureId: e.value
-    })
-
     fetch("https://localhost:44334/metra/destinations", {
       method: 'POST',
       headers: {
@@ -53,13 +54,27 @@ export default class MetraForm extends Component {
     })
       .then(res => res.json())
       .then(res => {
-        console.log(this.state.selectedDepartureId)
+        var stopValues = [];
+
+        Object.entries(res).map((stop, i) => {
+
+          // label is stop name, value is stop id
+          return stopValues.push({ label: stop[1], value: stop[0] })
+        })
+
+        this.setState({
+          apiDidRespond: true,
+          destinations: stopValues,
+          selectedDepartureId: e.value,
+          destinationDisabled: false
+        })
       })
   }
 
   handleDestination = (e) => {
     this.setState({
-      selectedDestinationId: e.value
+      selectedDestinationId: e.value,
+      submitDisabled: false,
     })
   }
 
@@ -72,19 +87,28 @@ export default class MetraForm extends Component {
       },
       body: JSON.stringify({
         selectedDepartureId: this.state.selectedDepartureId,
-        selectedDestinationId: this.state.destinationId,
+        selectedDestinationId: this.state.selectedDestinationId,
       })
 
     })
       .then(res => res.json())
-      .then(res => console.log(res))
+      .then(res => console.log(res));
   }
 
 
   render() {
+    const { fade } = this.state;
+
+    let formElement = document.getElementsByClassName("form-container")[0]
+    console.log(formElement);
 
     return (
-        <div className="form-container">
+        <form 
+          className="form-container"
+          onSubmit={() => this.setState({fade: true})}
+          onAnimationEnd={() => this.setState({fade: false})}
+          className={fade ? 'fade' : ''}>
+
           <Select 
             onChange={this.handleDeparture}
             placeholder="Select Departure..."
@@ -95,16 +119,19 @@ export default class MetraForm extends Component {
           <Select 
             placeholder="Select Destination..."
             onChange={this.handleDestination}
+            options={this.state.destinations}
+            isDisabled={this.state.destinationDisabled}
           />
+
 
           <Button 
             className="submit-stops" 
             color="success"
             onClick={this.submit}
+            disabled={this.state.submitDisabled}
           >Pick Times</Button>
 
-
-        </div>
+        </form>
 
     )
   }

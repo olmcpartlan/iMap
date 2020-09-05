@@ -7,13 +7,17 @@ import MobileHome from './MobileHome';
 export class Layout extends Component {
   static displayName = Layout.name;
 
+  componentDidMount() {
+    console.log(window.outerHeight);
+    console.log(window.outerWidth);
+  }
+
 
   render () {
     return (
       <div>
         <NavMenu />
-
-        <MediaQuery query="(max-width: 375px)">
+        <MediaQuery query="(max-width: 376px)">
           <MobileHome/>
         </MediaQuery>
 

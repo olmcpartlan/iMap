@@ -1,18 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data.SqlClient;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Security;
-using System.Threading.Tasks;
-using MetraApi.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Internal;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Controller;
 using Newtonsoft.Json;
+using MetraApi.Models;
+using System.Data.SqlClient;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+
+// The main idea here is to use sql queries for the larger datasets (stop_times, routes) as they're 
+// not likely to change. 
+
+// For smaller things like metra alerts, schedule announcements, or anything that is subject to update quickly
+// using http requests 
+
 
 namespace MetraApi.Controllers
 {
@@ -42,6 +44,7 @@ namespace MetraApi.Controllers
       stops.ForEach(stop =>
       {
         stopNames.Add(stop.stop_id, stop.stop_name);
+
       });
 
       client.DefaultRequestHeaders.Remove("Authorization");
@@ -50,12 +53,12 @@ namespace MetraApi.Controllers
     }
 
     [HttpPost("destinations")]
-    public string GetDestinations([FromBody] object body)
+    public Dictionary<string, string> GetDestinations([FromBody] object body)
     {
       // need to deserialize because the response can only come in as object
       Dictionary<string, string> departure = JsonConvert.DeserializeObject<Dictionary<string, string>>(body.ToString());
 
-      // get the route id from the trips table
+      // the static metra information contains a lot of tables. joins are very likely
       string query = @$"
         SELECT DISTINCT route_id
 
@@ -74,14 +77,15 @@ namespace MetraApi.Controllers
 
         using (SqlDataReader reader = routeIdCommand.ExecuteReader())
         {
-          while(reader.Read())
+          while (reader.Read())
           {
             route_id = reader.GetString(0);
-            Console.WriteLine();
 
           }
 
         }
+        // after using the stop id to find the route id, we can then get the possible destinations 
+        // for the selected stop which will be displayed by the user
 
         string stopNamesQuery = $@"
           SELECT 
@@ -93,38 +97,103 @@ namespace MetraApi.Controllers
 
         ";
 
+        // like the first response, sending a dictionary with id and name, so the id can be used in furure queries
+        Dictionary<string, string> stops = new Dictionary<string, string>();
 
         SqlCommand stopNamesCommand = new SqlCommand(stopNamesQuery, sqlConnection);
         using (SqlDataReader reader = stopNamesCommand.ExecuteReader())
         {
-          while(reader.Read())
+          while (reader.Read())
           {
-            for(int i = 0; i < reader.FieldCount; i++)
+            // sql data reader reads one string at a time, need to split into key value
+            // other option was to check % 2 == 0, but i felt incrementing like this was easier with the dictionary
+            for (int i = 0; i < reader.FieldCount; i += 2)
             {
-              var content = reader.GetString(i);
-
-              Console.WriteLine();
-
+              stops.Add(reader.GetString(i), reader.GetString(i + 1));
             }
           }
         }
 
+        return stops;
       };
-
-
-
-      return "done";
     }
 
 
     [HttpPost("stoptimes")]
     public ActionResult<string> GetTimesToday([FromBody] object body)
     {
-      Console.WriteLine(body);
+      // body contains the departure id and destination id 
 
-      var stopIds = JsonConvert.DeserializeObject(body.ToString());
+      Dictionary<string, string> stopIds = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(body.ToString());
 
-      Console.WriteLine();
+      JsonSerializer serializer = new JsonSerializer();
+
+
+      using (SqlConnection connection = Configurations.CreateSqlConnection())
+      {
+        using (SqlCommand command = new SqlCommand("GetTimesToday", connection))
+        {
+          command.CommandType = System.Data.CommandType.StoredProcedure;
+          command.Parameters.AddWithValue("@departure", stopIds["selectedDepartureId"]);
+
+          connection.Open();
+
+          List<MetraStopsWithDays> metraStopsWithDays = new List<MetraStopsWithDays>();
+
+          using(SqlDataReader reader = command.ExecuteReader())
+          {
+            while(reader.Read())
+            {
+              metraStopsWithDays.Add(new MetraStopsWithDays()
+              {
+                stop_id = reader.GetString(0),
+                trip_id = reader.GetString(1),
+                arrival_time = reader.GetString(2),
+                stop_name = reader.GetString(3),
+                stop_lat = reader.GetDouble(4),
+                stop_lon = reader.GetDouble(5),
+                zone_id = reader.GetString(6),
+                service_id = reader.GetString(7),
+                stop_sequence = reader.GetString(8),
+                monday = reader.GetString(9),
+                tuesday = reader.GetString(10),
+                wednesday  = reader.GetString(11),
+                thursday = reader.GetString(12),
+                friday = reader.GetString(13),
+                saturday  = reader.GetString(14),
+                sunday  = reader.GetString(15),
+                previous_sequence = !reader.IsDBNull(16) ? reader.GetString(15) : null
+
+              });
+            }
+          }
+
+          // Since one of the column is lagged into the next row, there will always be a null previous sequence on the first row
+          MetraStopsWithDays null_previous = metraStopsWithDays.FirstOrDefault(s => s.previous_sequence == null);
+          metraStopsWithDays.Remove(null_previous);
+
+
+          // get the stops that have the selected departure and destination
+          List<MetraStopsWithDays> stopsWithDestination = metraStopsWithDays
+              .Where(s => int.Parse(s.previous_sequence) > int.Parse(s.stop_sequence))
+              .ToList();
+
+
+
+
+          connection.Close();
+
+          Console.WriteLine();
+
+        }
+      }
+
+
+
+      // from here need to link the timing information, and try to find how this works on a calendar??
+
+      // submission of the form needs to lead to an animation that slides the form to the side
+
 
       return "done";
     }

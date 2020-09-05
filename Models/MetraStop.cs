@@ -57,5 +57,39 @@ namespace MetraApi.Models
 
   }
 
+  public class StopInformation
+  {
+    public string trip_id { get; set; }
+    public string stop_id { get; set; }
+    public string stop_sequence { get; set; }
+
+  }
+
+  public class MetraStopsWithDays
+  {
+   
+    public string stop_id {get;set;}
+		public string trip_id {get;set;} 
+		public string arrival_time {get;set;} 
+		public string stop_name {get;set;}
+		public double stop_lat {get;set;}
+    public double stop_lon {get;set;}
+		public string zone_id {get;set;}
+		public string service_id {get;set;}
+		public string stop_sequence {get;set;}
+		public string monday {get;set;} 
+    public string tuesday  {get;set;}
+    public string wednesday  {get;set;}
+    public string thursday  {get;set;}
+    public string friday  {get;set;}
+    public string saturday  {get;set;}
+    public string sunday {get;set;}
+ 
+    public string previous_sequence {get;set;}
+
+  }
+
+
+}
 
 }

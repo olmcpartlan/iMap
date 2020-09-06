@@ -15,6 +15,8 @@ export default class MetraForm extends Component {
       destinationDisabled: true,
       submitDisabled: true,
       fade: false,
+      stopTimesDidRespond: false,
+      stopsWithTimes: []
     }
   }
 
@@ -78,7 +80,7 @@ export default class MetraForm extends Component {
     })
   }
 
-  submit = () => {
+  submit() {
     fetch("https://localhost:44334/metra/stoptimes", {
       method: 'POST',
       headers: {
@@ -92,7 +94,12 @@ export default class MetraForm extends Component {
 
     })
       .then(res => res.json())
-      .then(res => console.log(res));
+      .then(res => {
+        this.setState({
+          stopTimesDidRespond: true,
+          stopsWithTimes: res
+        })
+      });
   }
 
 
@@ -103,9 +110,19 @@ export default class MetraForm extends Component {
     console.log(formElement);
 
     return (
+      <div>
+        {!this.state.stopTimesDidRespond && 
+
+
         <form 
           className="form-container"
-          onSubmit={() => this.setState({fade: true})}
+          onSubmit={(e) => {
+            this.setState({
+              fade: true,
+            });
+            this.submit();
+            e.preventDefault();
+          }}
           onAnimationEnd={() => this.setState({fade: false})}
           className={fade ? 'fade' : ''}>
 
@@ -127,12 +144,49 @@ export default class MetraForm extends Component {
           <Button 
             className="submit-stops" 
             color="success"
-            onClick={this.submit}
             disabled={this.state.submitDisabled}
           >Pick Times</Button>
 
         </form>
 
+
+        }
+        
+
+        {this.state.stopTimesDidRespond &&
+
+
+        this.state.stopsWithTimes.map((stop, i) => {
+          return <Stop key={i} stop={stop}/>
+        })
+
+
+        }
+
+
+
+      </div>
+
+
+    )
+  }
+}
+
+class Stop extends Component {
+  constructor(props) {
+    super(props);
+  }
+
+  render() {
+    const stop = this.props.stop
+
+    return (
+      <div className="stop-card">
+        <p>Departure: {stop.departure_name}</p>
+        <p>Departure Time: {stop.departure_time}</p>
+        <p>Destination: {stop.destination_name}</p>
+        <p>Destination Time: {stop.destination_time}</p>
+      </div>
     )
   }
 }

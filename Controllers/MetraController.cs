@@ -127,7 +127,7 @@ namespace MetraApi.Controllers
 
       JsonSerializer serializer = new JsonSerializer();
 
-
+      // run a procedure that gets the departure and destination stops and joins with calendar dates and trip information
       using (SqlConnection connection = Configurations.CreateSqlConnection())
       {
         using (SqlCommand command = new SqlCommand("GetTimesToday", connection))
@@ -178,31 +178,39 @@ namespace MetraApi.Controllers
 
 
 
+          // still need to filter a lot
           metraStopsWithDays.ForEach(stop =>
           {
+            // splits the stops into destination and departure
             MetraStopsWithDays[] commonTrips = metraStopsWithDays.Where(s => s.trip_id == stop.trip_id).ToArray();
 
+            // unfortunately the date data is stored in day of the week columns with bools
+            // this gets the stops running today
             string today = DateTime.Today.DayOfWeek.ToString().ToLower();
-
             string runsToday = stop.GetType().GetProperty(today).GetValue(stop, null).ToString();
+
 
             if (runsToday == "1")
             {
+              // make sure the stop has destination and departure
               if (commonTrips.Count() > 1)
               {
-                finalStopInformation.Add(new MetraStopTime()
+                if(commonTrips[0].stop_id == stopIds["selectedDepartureId"])
                 {
-                  trip_id = stop.trip_id,
-                  departure_id = commonTrips[0].stop_id,
-                  departure_name = commonTrips[0].stop_name,
-                  departure_time = commonTrips[0].arrival_time,
+                  finalStopInformation.Add(new MetraStopTime()
+                  {
+                    trip_id = stop.trip_id,
+                    departure_id = commonTrips[0].stop_id,
+                    departure_name = commonTrips[0].stop_name,
+                    departure_time = commonTrips[0].arrival_time,
 
-                  destination_id = commonTrips[1].stop_id,
-                  destination_name = commonTrips[1].stop_name,
-                  destination_time = commonTrips[1].arrival_time,
+                    destination_id = commonTrips[1].stop_id,
+                    destination_name = commonTrips[1].stop_name,
+                    destination_time = commonTrips[1].arrival_time,
 
-                });
+                  });
 
+                }
               }
             }
 
@@ -210,6 +218,7 @@ namespace MetraApi.Controllers
 
           connection.Close();
 
+          // this gives us distinct times
           return finalStopInformation.GroupBy(x => x.departure_time) 
             .Select(group => group.First()).ToList();
 

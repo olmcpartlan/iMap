@@ -17,6 +17,22 @@
 }
 
 .stop-card {
-  width: 90%;
+  width: 80%;
+  margin: 8%;
   border: 1px solid black;
+  transition-property: display;
+
+}
+
+.stop-card-time {
+  margin-left: 10%;
+}
+
+.swap-destination-icon {
+  padding-top: 5px;
+}
+
+.destination-button {
+  width: 35%;
+  margin: 5%;
 }

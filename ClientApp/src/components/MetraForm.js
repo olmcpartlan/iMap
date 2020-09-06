@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Select from 'react-select';
 import { Button } from 'reactstrap';
-import { useSpring, animated } from 'react-spring'
+import { Stop, Stops } from './MetraStop';
 
 export default class MetraForm extends Component {
   constructor(props) {
@@ -152,40 +152,11 @@ export default class MetraForm extends Component {
 
         }
         
-
+        {/* Once the correct  metra times come in, we need to map and display them */}
         {this.state.stopTimesDidRespond &&
-
-
-        this.state.stopsWithTimes.map((stop, i) => {
-          return <Stop key={i} stop={stop}/>
-        })
-
-
+        <Stops stopsWithTimes={this.state.stopsWithTimes} />
         }
 
-
-
-      </div>
-
-
-    )
-  }
-}
-
-class Stop extends Component {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    const stop = this.props.stop
-
-    return (
-      <div className="stop-card">
-        <p>Departure: {stop.departure_name}</p>
-        <p>Departure Time: {stop.departure_time}</p>
-        <p>Destination: {stop.destination_name}</p>
-        <p>Destination Time: {stop.destination_time}</p>
       </div>
     )
   }

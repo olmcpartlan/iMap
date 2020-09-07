@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import Select from 'react-select';
 import { Button } from 'reactstrap';
 import { Stop, Stops } from './MetraStop';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlaneArrival, faPlaneDeparture, faRandom } from "@fortawesome/free-solid-svg-icons";
 
 export default class MetraForm extends Component {
   constructor(props) {
@@ -16,13 +18,14 @@ export default class MetraForm extends Component {
       submitDisabled: true,
       fade: false,
       stopTimesDidRespond: false,
-      stopsWithTimes: []
+      stopsWithTimes: [],
+      destinationIsSwapped: true,
     }
   }
 
   // start by getting all stop names with the stop ids
   componentDidMount() {
-    fetch("https://localhost:44334/metra/stops")
+    fetch("/metra/stops")
       .then(res => res.json())
       .then(res => {
         var stopValues = [];
@@ -43,7 +46,7 @@ export default class MetraForm extends Component {
   }
 
   handleDeparture = (e) => {
-    fetch("https://localhost:44334/metra/destinations", {
+    fetch("/metra/destinations", {
       method: 'POST',
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -68,7 +71,8 @@ export default class MetraForm extends Component {
           apiDidRespond: true,
           destinations: stopValues,
           selectedDepartureId: e.value,
-          destinationDisabled: false
+          destinationDisabled: false,
+
         })
       })
   }
@@ -81,7 +85,7 @@ export default class MetraForm extends Component {
   }
 
   submit() {
-    fetch("https://localhost:44334/metra/stoptimes", {
+    fetch("/metra/stoptimes", {
       method: 'POST',
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -99,9 +103,21 @@ export default class MetraForm extends Component {
           stopTimesDidRespond: true,
           stopsWithTimes: res
         })
-      });
+      })
+      .catch(err => console.log(err));
   }
 
+
+  swapDestinations = () => {
+    const currentDeparture = this.state.selectedDepartureId;
+    const currentDestination = this.state.selectedDestinationId;
+    const isSwapped = this.state.destinationIsSwapped;
+    this.setState({
+      destinationIsSwapped: !isSwapped,
+      selectedDepartureId: currentDestination,
+      selectedDestinationId: currentDeparture
+    })
+  }
 
   render() {
     const { fade } = this.state;
@@ -154,7 +170,35 @@ export default class MetraForm extends Component {
         
         {/* Once the correct  metra times come in, we need to map and display them */}
         {this.state.stopTimesDidRespond &&
-        <Stops stopsWithTimes={this.state.stopsWithTimes} />
+        <div>
+          <div className="destinations-container">
+            <Button 
+              className="destination-button"
+              disabled={true}
+            >{this.state.stopsWithTimes[0].destination_name}</Button>
+            <Button onClick={this.swapDestinations} >
+              <FontAwesomeIcon 
+                size='1x' 
+                className="swap-destination-icon" 
+                
+                icon={faRandom} 
+              />
+
+            </Button>
+            <Button 
+              className="destination-button"
+              disabled={true}
+            >{this.state.stopsWithTimes[0].departure_name}</Button>
+
+          </div>
+          <Stops 
+            stopsWithTimes={this.state.destinationIsSwapped 
+              ? this.state.stopsWithTimes.filter(s => s.departure_id == this.state.selectedDepartureId)
+              : this.state.stopsWithTimes.filter(s => s.departure_id == this.state.selectedDestinationId)
+            } 
+          />
+
+        </div>
         }
 
       </div>

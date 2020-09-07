@@ -1,6 +1,5 @@
 ﻿using MetraApi.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.SqlServer.Server;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -124,14 +123,13 @@ namespace MetraApi.Controllers
     {
       // body contains the departure id and destination id 
 
-      Dictionary<string, string> stopIds = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(body.ToString());
+      Dictionary<string, string> stopIds = JsonConvert.DeserializeObject<Dictionary<string, string>>(body.ToString());
 
       JsonSerializer serializer = new JsonSerializer();
 
-      // run a procedure that gets the departure and destination stops and joins with calendar dates and trip information
       using (SqlConnection connection = Configurations.CreateSqlConnection())
       {
-        using (SqlCommand command = new SqlCommand("GetTimesToday", connection))
+        using (SqlCommand command = new SqlCommand("[dbo].[GetTimesToday]", connection))
         {
           command.CommandType = System.Data.CommandType.StoredProcedure;
           command.Parameters.AddWithValue("@departure", stopIds["selectedDestinationId"]);
@@ -163,9 +161,10 @@ namespace MetraApi.Controllers
                 friday = reader.GetString(13),
                 saturday = reader.GetString(14),
                 sunday = reader.GetString(15),
-                previous_sequence = !reader.IsDBNull(16) ? reader.GetString(15) : null
 
               });
+
+
             }
           }
 
@@ -177,11 +176,10 @@ namespace MetraApi.Controllers
           List<MetraStopsWithDays> stopsWithDestination = new List<MetraStopsWithDays>();
           List<MetraStopTime> finalStopInformation = new List<MetraStopTime>();
 
-
-
           // still need to filter a lot
-          metraStopsWithDays.ForEach(stop =>
+          foreach (MetraStopsWithDays stop in metraStopsWithDays)
           {
+            Console.WriteLine(metraStopsWithDays.IndexOf(stop));
             // splits the stops into destination and departure
             MetraStopsWithDays[] commonTrips = metraStopsWithDays.Where(s => s.trip_id == stop.trip_id).ToArray();
 
@@ -193,51 +191,54 @@ namespace MetraApi.Controllers
 
             if (runsToday == "1")
             {
-              // make sure the stop has destination and departure
               if (commonTrips.Count() > 1)
               {
-                if(commonTrips[0].stop_id == stopIds["selectedDepartureId"])
+                // make sure the stop has destination and departure
+                string formattedDepartureTime = "";
+                string formattedDestinationTime = "";
+                try
                 {
-                  string formattedDepartureTime = "";
-                  string formattedDestinationTime = "";
-                  try
-                  {
-                    formattedDepartureTime = DateTime.Parse(commonTrips[0].arrival_time).ToShortTimeString();
-                    formattedDestinationTime = DateTime.Parse(commonTrips[1].arrival_time).ToShortTimeString();
-
-                  } catch 
-                  {
-                    formattedDestinationTime = "N/A";
-                    formattedDepartureTime = "N/A";
-                  }
-                  finalStopInformation.Add(new MetraStopTime()
-                  {
-                    trip_id = stop.trip_id,
-                    departure_id = commonTrips[0].stop_id,
-                    departure_name = commonTrips[0].stop_name,
-                    departure_time = formattedDepartureTime,
-
-                    destination_id = commonTrips[1].stop_id,
-                    destination_name = commonTrips[1].stop_name,
-                    destination_time = formattedDestinationTime,
-
-                  });
+                  formattedDepartureTime = DateTime.Parse(commonTrips[0].arrival_time).ToShortTimeString();
+                  formattedDestinationTime = DateTime.Parse(commonTrips[1].arrival_time).ToShortTimeString();
 
                 }
+                catch
+                {
+                  formattedDestinationTime = "N/A";
+                  formattedDepartureTime = "N/A";
+                }
+                finalStopInformation.Add(new MetraStopTime()
+                {
+                  trip_id = stop.trip_id,
+                  departure_id = commonTrips[0].stop_id,
+                  departure_name = commonTrips[0].stop_name,
+                  departure_time = formattedDepartureTime,
+
+                  destination_id = commonTrips[1].stop_id,
+                  destination_name = commonTrips[1].stop_name,
+                  destination_time = formattedDestinationTime,
+
+                });
+
               }
+
             }
 
-          });
+          }
 
           connection.Close();
 
+
           // this gives us distinct times
-          return finalStopInformation.GroupBy(x => x.departure_time) 
-            .Select(group => group.First()).ToList();
+          return finalStopInformation.GroupBy(x => x.departure_time)
+                                     .Select(group => group.First())
+                                     .ToList();
+
 
 
         }
       }
+      // run a procedure that gets the departure and destination stops and joins with calendar dates and trip information
 
 
 

@@ -49,6 +49,7 @@ render() {
             className="train-type-button"
             color="danger"
             onClick={this.handleCTA}
+            disabled={true}
           >CTA</Button>
 
 

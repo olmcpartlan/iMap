@@ -16,13 +16,13 @@ export class Layout extends Component {
   render () {
     return (
       <div>
-        <NavMenu />
         <MediaQuery query="(max-width: 376px)">
           <MobileHome/>
         </MediaQuery>
 
         <MediaQuery query="(min-width: 376px)">
-          <p>large screen</p>
+          <p>This application currently only supports mobile browsers.</p>
+          <p>Please resize your browser to less that 376px wide.</p>
         </MediaQuery>
 
         <Container>

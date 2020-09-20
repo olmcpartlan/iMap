@@ -14,7 +14,6 @@ export default class MobileHome extends Component {
     }
   }
   componentDidMount() {
-    console.log("loaded");
   }
 
   handleCTA = () => {

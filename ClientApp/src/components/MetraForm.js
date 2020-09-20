@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import Select from 'react-select';
-import { Button } from 'reactstrap';
+import { Button, Col, Row } from 'reactstrap';
 import { Stop, Stops } from './MetraStop';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlaneArrival, faPlaneDeparture, faRandom } from "@fortawesome/free-solid-svg-icons";
+import { withRouter } from 'react-router-dom';
+import StopInfo from './StopInfo';
 
 export default class MetraForm extends Component {
   constructor(props) {
@@ -20,6 +22,7 @@ export default class MetraForm extends Component {
       stopTimesDidRespond: false,
       stopsWithTimes: [],
       destinationIsSwapped: true,
+      loadingMessage: ""
     }
   }
 
@@ -46,6 +49,9 @@ export default class MetraForm extends Component {
   }
 
   handleDeparture = (e) => {
+    this.setState({
+      loadingMessage: "Loading possible destinations..."
+    })
     fetch("/metra/destinations", {
       method: 'POST',
       headers: {
@@ -72,6 +78,7 @@ export default class MetraForm extends Component {
           destinations: stopValues,
           selectedDepartureId: e.value,
           destinationDisabled: false,
+          loadingMessage: "",
 
         })
       })
@@ -117,88 +124,103 @@ export default class MetraForm extends Component {
       selectedDepartureId: currentDestination,
       selectedDestinationId: currentDeparture
     })
+
+    console.log(currentDeparture)
+
   }
 
   render() {
     const { fade } = this.state;
 
-    let formElement = document.getElementsByClassName("form-container")[0]
-    console.log(formElement);
-
     return (
       <div>
-        {!this.state.stopTimesDidRespond && 
+        {!this.state.stopTimesDidRespond &&
 
 
-        <form 
-          className="form-container"
-          onSubmit={(e) => {
-            this.setState({
-              fade: true,
-            });
-            this.submit();
-            e.preventDefault();
-          }}
-          onAnimationEnd={() => this.setState({fade: false})}
-          className={fade ? 'fade' : ''}>
+          <form
+            className="form-container"
+            onSubmit={(e) => {
+              this.setState({
+                fade: true,
+              });
+              this.submit();
+              e.preventDefault();
+            }}
+            onAnimationEnd={() => this.setState({ fade: false })}
+            className={fade ? 'fade' : ''}>
 
-          <Select 
-            onChange={this.handleDeparture}
-            placeholder="Select Departure..."
-            options={this.state.stops}
-          />
+            <Select
+              onChange={this.handleDeparture}
+              placeholder="Select Departure..."
+              options={this.state.stops}
+            />
 
-
-          <Select 
-            placeholder="Select Destination..."
-            onChange={this.handleDestination}
-            options={this.state.destinations}
-            isDisabled={this.state.destinationDisabled}
-          />
+            <span className="loading-label">{this.state.loadingMessage}</span>
 
 
-          <Button 
-            className="submit-stops" 
-            color="success"
-            disabled={this.state.submitDisabled}
-          >Pick Times</Button>
+            <Select
+              placeholder="Select Destination..."
+              onChange={this.handleDestination}
+              options={this.state.destinations}
+              isDisabled={this.state.destinationDisabled}
+            />
 
-        </form>
+
+            <Button
+              className="submit-stops"
+              color="success"
+              disabled={this.state.submitDisabled}
+            >Pick Times</Button>
+
+          </form>
 
 
         }
-        
+
         {/* Once the correct  metra times come in, we need to map and display them */}
         {this.state.stopTimesDidRespond &&
-        <div>
-          <div className="destinations-container">
-            <Button 
-              className="destination-button"
-              disabled={true}
-            >{this.state.stopsWithTimes[0].destination_name}</Button>
-            <Button onClick={this.swapDestinations} >
-              <FontAwesomeIcon 
-                size='1x' 
-                className="swap-destination-icon" 
-                
-                icon={faRandom} 
-              />
+          <div>
+            <div className="destinations-container">
+              <Row>
 
-            </Button>
-            <Button 
-              className="destination-button"
-              disabled={true}
-            >{this.state.stopsWithTimes[0].departure_name}</Button>
+                <Col className="destination-button">
+                  {this.state.stopsWithTimes.filter(s => s.destination_id == this.state.selectedDestinationId)[0].departure_name}
+                </Col>
+
+                <Col className="swap-destination-icon">
+                  <Button onClick={this.swapDestinations} >
+                    <FontAwesomeIcon
+                      size='1x'
+                      icon={faRandom}
+                    />
+
+                  </Button>
+                </Col>
+                
+                <Col className="destination-button" >
+                  {this.state.stopsWithTimes.filter(s => s.destination_id == this.state.selectedDestinationId)[0].destination_name}
+                </Col>
+
+              </Row>
+            </div>
+            {!this.state.destinationIsSwapped && 
+            
+              <Stops
+                stopsWithTimes= {this.state.stopsWithTimes.filter(s => s.destination_id == this.state.selectedDestinationId)}
+              />
+            
+            }
+            {this.state.destinationIsSwapped && 
+            
+              <Stops
+                stopsWithTimes= {this.state.stopsWithTimes.filter(s => s.departure_id == this.state.selectedDepartureId)}
+              />
+            
+            }
+
+
 
           </div>
-          <Stops 
-            stopsWithTimes={this.state.destinationIsSwapped 
-              ? this.state.stopsWithTimes.filter(s => s.departure_id == this.state.selectedDepartureId)
-              : this.state.stopsWithTimes.filter(s => s.departure_id == this.state.selectedDestinationId)
-            } 
-          />
-
-        </div>
         }
 
       </div>

@@ -11,8 +11,7 @@ using System.Threading.Tasks;
 // The main idea here is to use sql queries for the larger datasets (stop_times, routes) as they're 
 // not likely to change. 
 
-// For smaller things like metra alerts, schedule announcements, or anything that is subject to update quickly
-// using http requests 
+// Using http requests for smaller things like metra alerts, schedule announcements, or anything that is subject to update quickly
 
 
 namespace MetraApi.Controllers
@@ -193,32 +192,61 @@ namespace MetraApi.Controllers
             {
               if (commonTrips.Count() > 1)
               {
-                // make sure the stop has destination and departure
                 string formattedDepartureTime = "";
                 string formattedDestinationTime = "";
+
+                string formattedDepartureDate = "";
+                string formattedDestinationDate = "";
+
+
+                // some stops have a destination time of 25:20.. not sure why
+
                 try
                 {
                   formattedDepartureTime = DateTime.Parse(commonTrips[0].arrival_time).ToShortTimeString();
                   formattedDestinationTime = DateTime.Parse(commonTrips[1].arrival_time).ToShortTimeString();
 
+                  formattedDepartureDate = DateTime.Parse(commonTrips[0].arrival_time).ToShortDateString();
+                  formattedDestinationDate = DateTime.Parse(commonTrips[1].arrival_time).ToShortDateString();
+
                 }
                 catch
                 {
-                  formattedDestinationTime = "N/A";
-                  formattedDepartureTime = "N/A";
+                  // if a time is something like 25:45, we can just ignore it 
+                  continue;
                 }
-                finalStopInformation.Add(new MetraStopTime()
+
+                string currentTime = DateTime.Now.ToShortTimeString();
+
+                // compare the first hours of the departure time and current time. 
+                // destination could be 2 am in the next morning so we dont want to compare it
+                int currentHour = 0;
+                int departureHour = 0;
+                  currentHour = int.Parse(currentTime.Split(':')[0]);
+                  departureHour = int.Parse(formattedDepartureTime.Split(':')[0]);
+
+
+                if(currentHour <= departureHour)
                 {
-                  trip_id = stop.trip_id,
-                  departure_id = commonTrips[0].stop_id,
-                  departure_name = commonTrips[0].stop_name,
-                  departure_time = formattedDepartureTime,
+                  finalStopInformation.Add(new MetraStopTime()
+                  {
+                    trip_id = commonTrips[0].trip_id,
 
-                  destination_id = commonTrips[1].stop_id,
-                  destination_name = commonTrips[1].stop_name,
-                  destination_time = formattedDestinationTime,
+                    departure_id   = commonTrips[0].stop_id,
+                    departure_name = commonTrips[0].stop_name,
+                    departure_time = formattedDepartureTime,
+                    departure_date = formattedDepartureDate,
 
-                });
+
+                    destination_id   = commonTrips[1].stop_id,
+                    destination_name = commonTrips[1].stop_name,
+                    destination_time = formattedDestinationTime,
+                    destination_date = formattedDestinationDate,
+
+                  });
+
+                }
+
 
               }
 
@@ -238,13 +266,6 @@ namespace MetraApi.Controllers
 
         }
       }
-      // run a procedure that gets the departure and destination stops and joins with calendar dates and trip information
-
-
-
-      // from here need to link the timing information, and try to find how this works on a calendar??
-
-      // submission of the form needs to lead to an animation that slides the form to the side
 
     }
 

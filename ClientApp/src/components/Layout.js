@@ -14,8 +14,9 @@ export class Layout extends Component {
 
 
   render () {
+
     return (
-      <div>
+      <div className="app">
         <MediaQuery query="(max-width: 376px)">
           <MobileHome/>
         </MediaQuery>

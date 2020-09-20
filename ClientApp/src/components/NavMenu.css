@@ -2,6 +2,10 @@
   width: 50%;
 }
 
+.app {
+  height: 100%;
+}
+
 .form-container {
   width: 90%;
   margin: 5%;
@@ -16,12 +20,50 @@
   margin-top: 5%;
 }
 
+body {
+  overflow: hidden;
+}
+
+.trip-id {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.stop-info {
+  color: #6c757d;
+  margin: 5%;
+  text-align: center;
+}
+
+
+.fa-info-circle { 
+  margin: 5px;
+}
+
 .stop-card {
   width: 80%;
   margin: 8%;
   border: 1px solid black;
   transition-property: display;
+  background-color: #363636;
+  color: white;
+  border-radius: 15px;
 
+}
+
+.stop-container {
+  overflow: scroll;
+  margin-top: 20px;
+  height: 400px;
+}
+
+.loading-label {
+  color: red;
+  font-size: small;
+}
+
+.destinations-container {
+  margin-top: 30px;
 }
 
 .stop-card-time {
@@ -29,10 +71,10 @@
 }
 
 .swap-destination-icon {
-  padding-top: 5px;
+  display: contents;
 }
 
 .destination-button {
-  width: 33%;
   margin: 2%;
+  text-align: center;
 }

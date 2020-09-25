@@ -65,6 +65,22 @@ namespace MetraApi.Models
 
   }
 
+  public class MetraStopName
+  {
+    public string trip_id {get;set;}
+    public string arrival_time {get;set;}
+    public string departure_time {get;set;}
+    public string stop_id {get;set;}
+    public string stop_sequence {get;set;}
+    public string pickup_type {get;set;}
+    public string drop_off_type {get;set;}
+    public string center_boarding {get;set;}
+    public string south_boarding {get;set;}
+    public string bikes_allowed {get;set;}
+    public string notice {get;set;}
+
+  }
+
   public class MetraStopsWithDays
   {
    

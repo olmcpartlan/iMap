@@ -40,6 +40,15 @@ body {
   margin: 5px;
 }
 
+.button-container {
+  width: 90%;
+  margin-left: 5%;
+}
+
+.nav-button {
+  width: 50%;
+}
+
 .stop-card {
   width: 80%;
   margin: 8%;

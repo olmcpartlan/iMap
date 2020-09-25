@@ -32,6 +32,11 @@ export class Stops extends Component {
     return (
       <div>
         <div className="stop-container">
+          <div className="button-container">
+            <button className="btn btn-secondary nav-button">Today</button>
+            <button className="btn btn-secondary nav-button">Select Date</button>
+
+          </div>
           <AnimatedList
             animation={"fade"}
             initialAnimationDuration={1000}
@@ -96,21 +101,40 @@ export class Stop extends Component {
 export class StopInfo extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      allStopsInTrip: []
+    }
   }
 
-  componentDidUpdate() {
+  // this is a problem
+  componentDidUpdate(previous_props) {
     // if selected trip started, show the current location
+    if (previous_props.trip_id === this.props.stop) {
+    }
+    fetch(`/metra/selected-trip-stops`, {
+      body: JSON.stringify({
+        trip_id: this.props.stop.trip_id,
+      }),
+      method: 'POST',
+      headers: {
+        "Acess-Control-Allow-Origin": "*",
+        "Content-Type": "application/json"
+      }
+    })
+
+      .then(res => res.json())
+
+      .then(res => this.setState({
+        allStopsInTrip: res
+      }));
+
+      // this might loop infinitely
+      console.log(this.state.allStopsInTrip.length);
 
     const currentTime = `${new Date().toLocaleTimeString().split(':')[0]}:${new Date().toLocaleTimeString().split(':')[1]}`
 
-    // have the current time, departure time, and destination time
-    console.log(currentTime);
-    console.log(this.props.stop.departure_time)
-    console.log(this.props.stop.destination_time)
-
     // need to get the trip headsign and final stop
     // then use the headisgn time to find out where the trip is currently at and next destination
-    // gonna make a rest call
 
 
   }
@@ -118,10 +142,18 @@ export class StopInfo extends Component {
   render() {
     const isStopSelected = this.props.isStopSelected;
     const selectedStop = this.props.stop;
+
+
+    const previousTrip = this.state.allStopsInTrip.filter(stop => stop.trip_id == selectedStop.trip_id);
+
+
     return (
       <div className="stop-info">
         {isStopSelected &&
-          <h4>{selectedStop.trip_id}</h4>
+
+          <Row>
+            <h4>{selectedStop.trip_id}</h4>
+          </Row>
         }
 
         {!isStopSelected &&

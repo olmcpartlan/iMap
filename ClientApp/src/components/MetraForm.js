@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Spinner from 'react-bootstrap/Spinner'
 import Select from 'react-select';
 import { Button, Col, Row } from 'reactstrap';
 import { Stop, Stops } from './MetraStop';
@@ -6,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlaneArrival, faPlaneDeparture, faRandom } from "@fortawesome/free-solid-svg-icons";
 import { withRouter } from 'react-router-dom';
 import StopInfo from './StopInfo';
+import { setConstantValue } from 'typescript';
 
 export default class MetraForm extends Component {
   constructor(props) {
@@ -22,7 +24,10 @@ export default class MetraForm extends Component {
       stopTimesDidRespond: false,
       stopsWithTimes: [],
       destinationIsSwapped: true,
-      loadingMessage: ""
+      loadingMessage: "",
+      departureMessage: "Loading all Metra Stops..."
+
+
     }
   }
 
@@ -50,7 +55,8 @@ export default class MetraForm extends Component {
 
   handleDeparture = (e) => {
     this.setState({
-      loadingMessage: "Loading possible destinations..."
+      loadingMessage: "Loading possible destinations...",
+      destinationDisabled: false,
     })
     fetch("/metra/destinations", {
       method: 'POST',
@@ -131,7 +137,6 @@ export default class MetraForm extends Component {
 
   render() {
     const { fade } = this.state;
-
     return (
       <div>
         {!this.state.stopTimesDidRespond &&
@@ -147,22 +152,21 @@ export default class MetraForm extends Component {
               e.preventDefault();
             }}
             onAnimationEnd={() => this.setState({ fade: false })}
-            className={fade ? 'fade' : ''}>
-
+            className={fade ? 'fade' : ''}
+          >
             <Select
               onChange={this.handleDeparture}
               placeholder="Select Departure..."
               options={this.state.stops}
+              noOptionsMessage={() => "Loading Stations..."}
             />
-
-            <span className="loading-label">{this.state.loadingMessage}</span>
-
 
             <Select
               placeholder="Select Destination..."
               onChange={this.handleDestination}
               options={this.state.destinations}
               isDisabled={this.state.destinationDisabled}
+              noOptionsMessage={() => "Loading Destinations..."}
             />
 
 

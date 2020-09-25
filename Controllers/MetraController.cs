@@ -220,10 +220,8 @@ namespace MetraApi.Controllers
 
                 // compare the first hours of the departure time and current time. 
                 // destination could be 2 am in the next morning so we dont want to compare it
-                int currentHour = 0;
-                int departureHour = 0;
-                  currentHour = int.Parse(currentTime.Split(':')[0]);
-                  departureHour = int.Parse(formattedDepartureTime.Split(':')[0]);
+                int currentHour = int.Parse(currentTime.Split(':')[0]);
+                int departureHour = int.Parse(formattedDepartureTime.Split(':')[0]);
 
 
                 if(currentHour <= departureHour)
@@ -262,12 +260,56 @@ namespace MetraApi.Controllers
                                      .Select(group => group.First())
                                      .ToList();
 
-
-
         }
       }
 
     }
 
+
+    [HttpPost("selected-trip-stops")]
+    public List<MetraStopName> GetAllStopsByTrip([FromBody] object tripObject)
+    {
+      // extract the trip_id value from the request body
+      var trip_values = JsonConvert.DeserializeObject<Dictionary<string, string>>(tripObject.ToString());
+      string trip_id = trip_values["trip_id"];
+
+      // use the trip id to get current stop, stop alerts, center boarding, etc..
+      using(SqlConnection conn = Configurations.CreateSqlConnection())
+      {
+        conn.Open();
+
+        using(SqlCommand cmd = conn.CreateCommand())
+        {
+          cmd.CommandText = $"SELECT * FROM stop_times WHERE trip_id = '{trip_id}'";
+
+          using(SqlDataReader reader = cmd.ExecuteReader())
+          {
+            List<MetraStopName> stops = new List<MetraStopName>();
+            while(reader.Read())
+            {
+              stops.Add(new MetraStopName()
+              {
+                trip_id = reader.GetString(0),
+                arrival_time = reader.GetString(1),
+                departure_time = reader.GetString(2),
+                stop_id = reader.GetString(3),
+
+                stop_sequence = reader.GetString(4),
+                pickup_type = reader.GetString(5),
+                drop_off_type = reader.GetString(6),
+                center_boarding = reader.GetString(7),
+                south_boarding = reader.GetString(8),
+                bikes_allowed = reader.GetString(9),
+                notice = reader.GetString(10),
+              });
+            }
+
+            return stops;
+          }
+        }
+      }
+
+
+    }
   }
 }

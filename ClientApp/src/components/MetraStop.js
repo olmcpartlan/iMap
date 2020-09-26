@@ -31,12 +31,12 @@ export class Stops extends Component {
   render() {
     return (
       <div>
-        <div className="stop-container">
-          <div className="button-container">
-            <button className="btn btn-secondary nav-button">Today</button>
-            <button className="btn btn-secondary nav-button">Select Date</button>
+        <div className="button-container">
+          <button className="btn btn-secondary nav-button">Today</button>
+          <button className="btn btn-secondary nav-button">Select Date</button>
 
-          </div>
+        </div>
+        <div className="stop-container">
           <AnimatedList
             animation={"fade"}
             initialAnimationDuration={1000}
@@ -53,7 +53,6 @@ export class Stops extends Component {
               </div>
             })}
           </AnimatedList>
-
 
         </div>
         <div>
@@ -109,8 +108,7 @@ export class StopInfo extends Component {
   // this is a problem
   componentDidUpdate(previous_props) {
     // if selected trip started, show the current location
-    if (previous_props.trip_id === this.props.stop) {
-    }
+    if (this.props.stop !== previous_props.stop) {
     fetch(`/metra/selected-trip-stops`, {
       body: JSON.stringify({
         trip_id: this.props.stop.trip_id,
@@ -130,6 +128,7 @@ export class StopInfo extends Component {
 
       // this might loop infinitely
       console.log(this.state.allStopsInTrip.length);
+    }
 
     const currentTime = `${new Date().toLocaleTimeString().split(':')[0]}:${new Date().toLocaleTimeString().split(':')[1]}`
 

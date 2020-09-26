@@ -156,6 +156,7 @@ export default class MetraForm extends Component {
           >
             <Select
               onChange={this.handleDeparture}
+              className="station-select"
               placeholder="Select Departure..."
               options={this.state.stops}
               noOptionsMessage={() => "Loading Stations..."}
@@ -163,6 +164,7 @@ export default class MetraForm extends Component {
 
             <Select
               placeholder="Select Destination..."
+              className="station-select"
               onChange={this.handleDestination}
               options={this.state.destinations}
               isDisabled={this.state.destinationDisabled}
@@ -172,7 +174,7 @@ export default class MetraForm extends Component {
 
             <Button
               className="submit-stops"
-              color="success"
+              color="secondary"
               disabled={this.state.submitDisabled}
             >Pick Times</Button>
 

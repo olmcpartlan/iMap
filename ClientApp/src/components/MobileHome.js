@@ -8,7 +8,7 @@ export default class MobileHome extends Component {
     super(props);
 
     this.state = {
-      showMetraForm: false,
+      showMetraForm: true,
       showCTAForm: false,
 
     }
@@ -38,6 +38,7 @@ render() {
     <div>
       <Row>
         <Col>
+        {/* 
           <Button
             className="train-type-button"
             color="primary"
@@ -51,6 +52,8 @@ render() {
             disabled={true}
           >CTA</Button>
 
+
+        */}
 
           {this.state.showMetraForm && 
             <MetraForm/>

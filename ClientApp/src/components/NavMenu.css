@@ -2,18 +2,30 @@
   width: 50%;
 }
 
+body {
+  background-image: url("/bg-crosshatch.png");
+}
+
 .app {
   height: 100%;
 }
 
+.station-select {
+  width: 85%;
+  margin: 25px;
+  box-shadow: 3px 3px 1px #9E9E9E;
+  border-radius: 5px;
+
+}
+
 .form-container {
-  width: 90%;
-  margin: 5%;
+  width: 80%;
+  margin: 25px;
 }
 
 .submit-stops {
-  margin-top: 10%;
-  width: 100%;
+  margin: 25px;
+  width: 85%;
 }
 
 .css-1aya2g8 {
@@ -31,7 +43,7 @@ body {
 
 .stop-info {
   color: #6c757d;
-  margin: 5%;
+  margin: 10%;
   text-align: center;
 }
 
@@ -41,8 +53,8 @@ body {
 }
 
 .button-container {
-  width: 90%;
-  margin-left: 5%;
+  width: 85%;
+  margin: 25px;
 }
 
 .nav-button {
@@ -51,7 +63,7 @@ body {
 
 .stop-card {
   width: 80%;
-  margin: 8%;
+  margin: 10%;
   border: 1px solid black;
   transition-property: display;
   background-color: #363636;
@@ -62,7 +74,7 @@ body {
 
 .stop-container {
   overflow: scroll;
-  margin-top: 20px;
+  margin-top: 25px;
   height: 400px;
 }
 
@@ -85,5 +97,6 @@ body {
 
 .destination-button {
   margin: 2%;
+  color: white;
   text-align: center;
 }

@@ -18,112 +18,15 @@ using TimeZoneConverter;
 namespace MetraApi.Controllers
 {
   [Route("metra")]
-  [ApiController]
-  public class MetraController : ControllerBase
+  public class StopsByDate : ControllerBase
   {
-    static HttpClient client = new HttpClient();
-
-    [HttpGet("stops")]
-    public async Task<Dictionary<string, string>> RequestMetra()
-    {
-      client = Configurations.CreateHttpConnection(client);
-
-      string url = "https://gtfsapi.metrarail.com/gtfs/schedule/stops";
-
-      HttpResponseMessage response = await client.GetAsync(url);
-      string responseContent = await response.Content.ReadAsStringAsync();
-
-      List<MetraStop> stops = new List<MetraStop>();
-
-      stops = JsonConvert.DeserializeObject<List<MetraStop>>(responseContent);
-
-      // the stop_id is used to reference the stop times in the db
-      Dictionary<string, string> stopNames = new Dictionary<string, string>();
-
-      stops.ForEach(stop =>
-      {
-        stopNames.Add(stop.stop_id, stop.stop_name);
-
-      });
-
-      client.DefaultRequestHeaders.Remove("Authorization");
-
-      return stopNames;
-    }
-
-    [HttpPost("destinations")]
-    public Dictionary<string, string> GetDestinations([FromBody] object body)
-    {
-      // need to deserialize because the response can only come in as object
-      Dictionary<string, string> departure = JsonConvert.DeserializeObject<Dictionary<string, string>>(body.ToString());
-
-      // the static metra information contains a lot of tables. joins are very likely
-      string query = @$"
-        SELECT DISTINCT route_id
-
-        FROM stop_times 
-          JOIN trips ON stop_times.trip_id=trips.trip_id
-          
-        WHERE stop_id = '{departure.Values.First()}';
-      ";
-
-      string route_id = "";
-
-      using (SqlConnection sqlConnection = Configurations.CreateSqlConnection())
-      {
-        sqlConnection.Open();
-        SqlCommand routeIdCommand = new SqlCommand(query, sqlConnection);
-
-        using (SqlDataReader reader = routeIdCommand.ExecuteReader())
-        {
-          while (reader.Read())
-          {
-            route_id = reader.GetString(0);
-
-          }
-
-        }
-        // after using the stop id to find the route id, we can then get the possible destinations 
-        // for the selected stop which will be displayed by the user
-
-        string stopNamesQuery = $@"
-          SELECT 
-            DISTINCT stops.stop_id, stops.stop_name
-          FROM stop_times 
-            JOIN stops ON stop_times.stop_id = stops.stop_id
-
-          WHERE trip_id LIKE '%{route_id}%';
-
-        ";
-
-        // like the first response, sending a dictionary with id and name, so the id can be used in furure queries
-        Dictionary<string, string> stops = new Dictionary<string, string>();
-
-        SqlCommand stopNamesCommand = new SqlCommand(stopNamesQuery, sqlConnection);
-        using (SqlDataReader reader = stopNamesCommand.ExecuteReader())
-        {
-          while (reader.Read())
-          {
-            // sql data reader reads one string at a time, need to split into key value
-            // other option was to check % 2 == 0, but i felt incrementing like this was easier with the dictionary
-            for (int i = 0; i < reader.FieldCount; i += 2)
-            {
-              stops.Add(reader.GetString(i), reader.GetString(i + 1));
-            }
-          }
-        }
-
-        return stops;
-      };
-    }
-
-
-    [HttpPost("stoptimes")]
-    public List<MetraStopTime> GetTimesToday([FromBody] object body)
+    [HttpPost("stopsbydate")]
+    public List<MetraStopTime> GetTimesOndate([FromBody] object body)
     {
       // body contains the departure id and destination id 
 
       Dictionary<string, string> stopIds = JsonConvert.DeserializeObject<Dictionary<string, string>>(body.ToString());
+
 
       JsonSerializer serializer = new JsonSerializer();
 
@@ -185,14 +88,16 @@ namespace MetraApi.Controllers
 
             // unfortunately the date data is stored in day of the week columns with bools
             // this gets the stops running today
-            string today = DateTime.Today.DayOfWeek.ToString().ToLower();
-            string runsToday = stop.GetType().GetProperty(today).GetValue(stop, null).ToString();
-
-            string tomorrow = DateTime.Today.AddDays(1).DayOfWeek.ToString().ToLower();
-            string runsTomorrow = stop.GetType().GetProperty(tomorrow).GetValue(stop, null).ToString();
 
 
-            if (runsToday == "1" || runsTomorrow == "1")
+            DateTime selectedDate = DateTime.Parse(stopIds["selectedDate"]);
+            string selectedDayOfWeek = selectedDate.DayOfWeek.ToString().ToLower();
+
+
+            string runsOnSelectedDate = stop.GetType().GetProperty(selectedDayOfWeek).GetValue(stop, null).ToString();
+
+
+            if (runsOnSelectedDate == "1")
             {
               if (commonTrips.Count() > 1)
               {
@@ -209,9 +114,6 @@ namespace MetraApi.Controllers
                 {
                   formattedDepartureTime = DateTime.Parse(commonTrips[0].arrival_time).ToShortTimeString();
                   formattedDestinationTime = DateTime.Parse(commonTrips[1].arrival_time).ToShortTimeString();
-
-                  formattedDepartureDate = DateTime.Parse(commonTrips[0].arrival_time).ToShortDateString();
-                  formattedDestinationDate = DateTime.Parse(commonTrips[1].arrival_time).ToShortDateString();
 
                 }
                 catch
@@ -237,16 +139,11 @@ namespace MetraApi.Controllers
                   departure_id   = commonTrips[0].stop_id,
                   departure_name = commonTrips[0].stop_name,
                   departure_time = formattedDepartureTime,
-                  departure_date = formattedDepartureDate,
 
 
                   destination_id   = commonTrips[1].stop_id,
                   destination_name = commonTrips[1].stop_name,
                   destination_time = formattedDestinationTime,
-                  destination_date = formattedDestinationDate,
-
-                  runs_today = runsToday == "1" ? true : false,
-                  runs_tomorrow = runsTomorrow == "1" ? true : false,
 
                 });
 
@@ -258,22 +155,8 @@ namespace MetraApi.Controllers
 
           DateTime newTime = DateTime.Now;
 
-          for(int i = 0; i < 2; i++)
-          {
-
-            finalStopInformation.Add(new MetraStopTime()
-            {
-              trip_id = newTime.ToString(),
-              departure_id = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(newTime, "Central Standard Time").ToString(),
-              departure_time = "something"
-
-            });
-
-          }
 
           connection.Close();
-
-          Console.WriteLine();
 
           // this gives us distinct times
           return finalStopInformation.GroupBy(x => x.departure_time)
@@ -287,7 +170,7 @@ namespace MetraApi.Controllers
 
 
     [HttpPost("selected-trip-stops/{trip_id}")]
-    public List<MetraStopName> GetAllStopsByTrip(string trip_id)
+    public List<MetraStopName> GetAllStopsByTripWithDate(string trip_id)
     {
       // extract the trip_id value from the request body
 

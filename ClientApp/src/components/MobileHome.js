@@ -31,14 +31,14 @@ export default class MobileHome extends Component {
       showMetraForm: true
     })
 
-}
+  }
 
-render() {
-  return (
-    <div>
-      <Row>
-        <Col>
-        {/* 
+  render() {
+    return (
+      <div>
+        <Row>
+          <Col>
+            {/* 
           <Button
             className="train-type-button"
             color="primary"
@@ -55,19 +55,19 @@ render() {
 
         */}
 
-          {this.state.showMetraForm && 
-            <MetraForm/>
-          }
+            {this.state.showMetraForm &&
+              <MetraForm />
+            }
 
-          {this.state.showCTAForm && 
-            <CTAForm/>
-          }
+            {this.state.showCTAForm &&
+              <CTAForm />
+            }
 
 
-        </Col>
-      </Row>
-    </div>
-  )
-}
+          </Col>
+        </Row>
+      </div>
+    )
+  }
 
 }

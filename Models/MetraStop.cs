@@ -118,6 +118,10 @@ namespace MetraApi.Models
     public string destination_name { get; set; }
     public string destination_time { get; set; }
     public string destination_date { get; set; }
+
+    public bool runs_today { get; set; }
+    public bool runs_tomorrow { get; set; }
+
   }
 
 }

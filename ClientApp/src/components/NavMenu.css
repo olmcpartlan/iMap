@@ -2,6 +2,25 @@
   width: 50%;
 }
 
+.date-form {
+  margin-left: 25px;
+  width: 85%;
+
+}
+
+.swap-button {
+  background-color: #4b5d67;
+}
+
+.btn-secondary {
+  background-color: #87556f;
+}
+
+.date-tag, .information-tag {
+  text-align: center;
+  color: white;
+}
+
 body {
   background-image: url("/bg-crosshatch.png");
 }
@@ -61,12 +80,22 @@ body {
   width: 50%;
 }
 
+.overlay-container {
+  margin: 15%;
+  width: 70%;
+  height: 75%;
+  color: white;
+  background-color: #222831;
+  box-shadow: "1px 3px 1px #9E9E9E";
+  text-align: center;
+}
+
 .stop-card {
   width: 80%;
   margin: 10%;
   border: 1px solid black;
   transition-property: display;
-  background-color: #363636;
+  background-color: #59405c;
   color: white;
   border-radius: 15px;
 

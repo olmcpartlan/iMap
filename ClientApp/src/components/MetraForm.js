@@ -116,6 +116,7 @@ export default class MetraForm extends Component {
           stopTimesDidRespond: true,
           stopsWithTimes: res
         })
+        console.log(res);
       })
       .catch(err => console.log(err));
   }
@@ -194,34 +195,34 @@ export default class MetraForm extends Component {
                 </Col>
 
                 <Col className="swap-destination-icon">
-                  <Button onClick={this.swapDestinations} >
+                  <button onClick={this.swapDestinations} className="btn swap-button">
                     <FontAwesomeIcon
                       size='1x'
                       icon={faRandom}
                     />
 
-                  </Button>
+                  </button>
                 </Col>
-                
+
                 <Col className="destination-button" >
                   {this.state.stopsWithTimes.filter(s => s.destination_id == this.state.selectedDestinationId)[0].destination_name}
                 </Col>
 
               </Row>
             </div>
-            {!this.state.destinationIsSwapped && 
-            
+            {!this.state.destinationIsSwapped &&
+
               <Stops
-                stopsWithTimes= {this.state.stopsWithTimes.filter(s => s.destination_id == this.state.selectedDestinationId)}
+                stopsWithTimes={this.state.stopsWithTimes.filter(s => s.destination_id == this.state.selectedDestinationId)}
               />
-            
+
             }
-            {this.state.destinationIsSwapped && 
-            
+            {this.state.destinationIsSwapped &&
+
               <Stops
-                stopsWithTimes= {this.state.stopsWithTimes.filter(s => s.departure_id == this.state.selectedDepartureId)}
+                stopsWithTimes={this.state.stopsWithTimes.filter(s => s.departure_id == this.state.selectedDepartureId)}
               />
-            
+
             }
 
 

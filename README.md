@@ -6,7 +6,7 @@
 
 
 - Application allows users to input desired departure and destination stops.
-  - SQL Procedures reference the Metra GTFS Static Schedule.
+  - Azure SQL Procedures reference the Metra GTFS Static Schedule.
   - .NET processes data and specifies certain filters like date, destination and departure order, and stop coordinates
   - React maps the returned stops and displays to user.
 

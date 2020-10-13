@@ -1,9 +1,8 @@
 ### Metra API
 
 - Azure live delpoloyment: https://metraapi.azurewebsites.net/
-  - There currently is no desktop view.
-  - UI looks best under 1200px wide.
-    - If stops aren't populating in the departure dropdown, open the link in a new tab.
+- UI looks best under 1200px wide.
+  - If stops aren't populating in the departure dropdown, open the link in a new tab.
 
 
 - Application allows users to input desired departure and destination stops.

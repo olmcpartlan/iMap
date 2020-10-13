@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Row, Col, Button } from 'reactstrap';
 import MetraForm from './MetraForm';
-import CTAForm from './CTAForm';
+import CTAForm from '../CTAForm';
 
 export default class MobileHome extends Component {
   constructor(props) {

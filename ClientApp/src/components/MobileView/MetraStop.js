@@ -71,7 +71,6 @@ export class Stops extends Component {
   }
 
   displayDate = () => {
-    console.log("clicked");
     this.setState({
       userSelectedDate: !this.state.userSelectedDate
     });
@@ -158,7 +157,7 @@ export class StopOverlay extends Component {
       stopInformation: []
     }
     fetch(`/metra/selected-trip-stops/${this.props.stop.trip_id}`, {
-      method: 'POST',
+      method:'GET',
       headers: {
         "Acess-Control-Allow-Origin": "*",
         "Content-Type": "application/json"

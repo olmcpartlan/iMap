@@ -123,6 +123,8 @@ namespace MetraApi.Controllers
                 }
 
                 DateTime currentTime = DateTime.Now;
+                formattedDepartureTime = DateTime.Parse(commonTrips[0].arrival_time).ToShortTimeString();
+                formattedDestinationTime = DateTime.Parse(commonTrips[1].arrival_time).ToShortTimeString();
 
                 TimeZoneInfo.ConvertTimeBySystemTimeZoneId(currentTime, "Central Standard Time");
 
@@ -140,10 +142,12 @@ namespace MetraApi.Controllers
                   departure_name = commonTrips[0].stop_name,
                   departure_time = formattedDepartureTime,
 
+                  departure_date = formattedDepartureDate,
+                  destination_date = formattedDestinationDate,
+                  destination_time = formattedDestinationTime,
 
                   destination_id   = commonTrips[1].stop_id,
                   destination_name = commonTrips[1].stop_name,
-                  destination_time = formattedDestinationTime,
 
                 });
 
@@ -153,8 +157,7 @@ namespace MetraApi.Controllers
 
           }
 
-          DateTime newTime = DateTime.Now;
-
+          Console.WriteLine();
 
           connection.Close();
 
@@ -169,7 +172,7 @@ namespace MetraApi.Controllers
     }
 
 
-    [HttpPost("selected-trip-stops/{trip_id}")]
+    [Route("selected-trip-stops/{trip_id}")]
     public List<MetraStopName> GetAllStopsByTripWithDate(string trip_id)
     {
       // extract the trip_id value from the request body

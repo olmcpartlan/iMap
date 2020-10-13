@@ -101,8 +101,12 @@ body {
 
 }
 
+.desktop-container {
+  width: 50%;
+}
+
 .stop-container {
-  overflow: scroll;
+  overflow: auto;
   margin-top: 25px;
   height: 400px;
 }

@@ -10,6 +10,16 @@ export default class DateForm extends Component {
       apiDidRespond: false
     };
   }
+
+
+  setSelectedStop(stop) {
+    this.setState({
+      selectedStop: stop,
+      isStopSelected: true
+    })
+  }
+
+
   getStops = (e) => {
     this.setState({
       apiDidRespond: false
@@ -33,7 +43,8 @@ export default class DateForm extends Component {
       .then(res => this.setState({
         stopsOnDate: res,
         apiDidRespond: true
-      }));
+      }))
+      .then(res => console.log(this.state.stopsOnDate))
 
   }
 
@@ -46,6 +57,7 @@ export default class DateForm extends Component {
           className="form-control"
           onChange={this.getStops}
           type="date"
+          placeholder="Select Date..."
         />
         {this.state.apiDidRespond &&
           <AnimatedList
